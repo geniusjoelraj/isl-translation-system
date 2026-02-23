@@ -12,7 +12,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
 import db
 
 # --- Configuration ---
@@ -23,9 +23,10 @@ app = Flask(__name__)
 CORS(app)
 
 # --- MediaPipe Setup ---
-base_options = python.BaseOptions(model_asset_path="hand_landmarker.task")
-options = vision.HandLandmarkerOptions(base_options=base_options, num_hands=1)
-detector = vision.HandLandmarker.create_from_options(options)
+# Hand landmarker: detect up to 2 hands
+hand_base = python.BaseOptions(model_asset_path="hand_landmarker.task")
+hand_options = vision.HandLandmarkerOptions(base_options=hand_base, num_hands=2)
+hand_detector = vision.HandLandmarker.create_from_options(hand_options)
 
 # --- Model State ---
 knn_model = None
@@ -60,17 +61,17 @@ def extract_landmarks(frame):
     """Extract hand landmarks from a BGR frame. Returns 84-feature list or None."""
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-    result = detector.detect(mp_image)
 
-    if not result.hand_landmarks:
+    hand_result = hand_detector.detect(mp_image)
+    if not hand_result.hand_landmarks:
         return None
 
     lm_list = []
-    for hand_landmarks in result.hand_landmarks:
+    for hand_landmarks in hand_result.hand_landmarks:
         for lm in hand_landmarks:
             lm_list.extend([lm.x, lm.y])
 
-    # Normalize to 84 features (2 hands * 21 landmarks * 2 coords)
+    # Pad to 84 if only 1 hand detected (42 → 84)
     if len(lm_list) == 42:
         lm_list.extend([0.0] * 42)
 
@@ -121,7 +122,7 @@ def train_and_save(file_path):
     if len(set(y)) < 2:
         return None, [], f"Need at least 2 different labels to train. Found: {set(y)}"
 
-    model = RandomForestClassifier(n_estimators=100, class_weight="balanced", random_state=42)
+    model = KNeighborsClassifier(n_neighbors=min(3, len(X)))
     model.fit(X, y)
 
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
