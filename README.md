@@ -10,6 +10,13 @@ A real-time Indian Sign Language (ISL) translator that uses MediaPipe hand landm
 - **Multi-hand detection** — detects up to 2 hands simultaneously
 - **Model management** — save, switch, and delete trained models
 
+## Project Screenshots
+![image-1](project-ss/Screenshot-2026-02-24_02:06:44.png)
+![image-2](project-ss/Screenshot-2026-02-24_02:07:20.png)
+![image-3](project-ss/Screenshot-2026-02-24_02:07:35.png)
+![image-4](project-ss/Screenshot-2026-02-24_02:07:57.png)
+![image-5](project-ss/Screenshot-2026-02-24_02:08:07.png)
+
 ## Tech Stack
 
 | Layer | Technology |
