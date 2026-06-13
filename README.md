@@ -129,7 +129,3 @@ isl-sign-language/
     │       └── MarketplacePage.jsx
     └── package.json
 ```
-
-## License
-
-MIT
